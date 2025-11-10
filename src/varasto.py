@@ -15,11 +15,6 @@ class Varasto:
             # täyteen ja ylimäärä hukkaan!
             self.saldo = tilavuus
 
-        if True:
-            if True:
-                if True:
-                    pass
-
     def paljonko_mahtuu(self):
         return self.tilavuus - self.saldo
 
