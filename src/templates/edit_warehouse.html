@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ warehouse.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Warehouse</h1>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Warehouse Name:</label>
+            <input type="text" id="name" name="name" value="{{ warehouse.name }}" required placeholder="Enter warehouse name">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{{ url_for('view_warehouse', warehouse_id=warehouse_id) }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

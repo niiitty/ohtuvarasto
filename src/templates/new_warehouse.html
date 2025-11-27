@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Warehouse{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Create New Warehouse</h1>
+    
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+    
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Warehouse Name:</label>
+            <input type="text" id="name" name="name" required placeholder="Enter warehouse name">
+        </div>
+        
+        <div class="form-group">
+            <label for="capacity">Capacity:</label>
+            <input type="number" id="capacity" name="capacity" step="0.01" min="0" required placeholder="Enter maximum capacity">
+        </div>
+        
+        <div class="form-group">
+            <label for="initial_balance">Initial Balance (optional):</label>
+            <input type="number" id="initial_balance" name="initial_balance" step="0.01" min="0" value="0" placeholder="Enter initial item count">
+        </div>
+        
+        <button type="submit" class="btn btn-success">Create Warehouse</button>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
