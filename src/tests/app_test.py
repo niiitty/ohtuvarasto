@@ -107,11 +107,14 @@ class TestFlaskApp(unittest.TestCase):
         })
 
         response = self.client.post('/warehouse/1/add', data={
+            'item_name': 'Apples',
             'amount': '30'
         }, follow_redirects=True)
 
         self.assertEqual(response.status_code, 200)
         self.assertAlmostEqual(warehouses[1]['varasto'].saldo, 30)
+        self.assertEqual(len(warehouses[1]['warehouse_items']), 1)
+        self.assertEqual(warehouses[1]['warehouse_items'][0]['name'], 'Apples')
 
     def test_remove_items_from_warehouse(self):
         """Test removing items from a warehouse."""
@@ -119,15 +122,22 @@ class TestFlaskApp(unittest.TestCase):
         self.client.post('/warehouse/new', data={
             'name': 'Remove Test',
             'capacity': '100',
-            'initial_balance': '50'
+            'initial_balance': '0'
+        })
+
+        # Add an item first
+        self.client.post('/warehouse/1/add', data={
+            'item_name': 'Oranges',
+            'amount': '50'
         })
 
         response = self.client.post('/warehouse/1/remove', data={
-            'amount': '20'
+            'item_index': '0'
         }, follow_redirects=True)
 
         self.assertEqual(response.status_code, 200)
-        self.assertAlmostEqual(warehouses[1]['varasto'].saldo, 30)
+        self.assertAlmostEqual(warehouses[1]['varasto'].saldo, 0)
+        self.assertEqual(len(warehouses[1]['warehouse_items']), 0)
 
     def test_edit_warehouse_page_loads(self):
         """Test that the edit warehouse page loads."""
@@ -183,6 +193,7 @@ class TestFlaskApp(unittest.TestCase):
     def test_add_items_to_nonexistent_warehouse(self):
         """Test adding items to nonexistent warehouse redirects."""
         response = self.client.post('/warehouse/999/add', data={
+            'item_name': 'Test',
             'amount': '10'
         }, follow_redirects=True)
         self.assertEqual(response.status_code, 200)
@@ -191,7 +202,7 @@ class TestFlaskApp(unittest.TestCase):
     def test_remove_items_from_nonexistent_warehouse(self):
         """Test removing items from nonexistent warehouse redirects."""
         response = self.client.post('/warehouse/999/remove', data={
-            'amount': '10'
+            'item_index': '0'
         }, follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Warehouse Manager', response.data)
@@ -216,6 +227,44 @@ class TestFlaskApp(unittest.TestCase):
         self.assertIn(b'Warehouse A', response.data)
         self.assertIn(b'Warehouse B', response.data)
         self.assertEqual(len(warehouses), 2)
+
+    def test_view_warehouse_shows_items(self):
+        """Test that warehouse view shows item names."""
+        # Create a warehouse first
+        self.client.post('/warehouse/new', data={
+            'name': 'Items Test',
+            'capacity': '100',
+            'initial_balance': '0'
+        })
+
+        # Add items
+        self.client.post('/warehouse/1/add', data={
+            'item_name': 'Bananas',
+            'amount': '25'
+        })
+
+        response = self.client.get('/warehouse/1')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Bananas', response.data)
+        self.assertIn(b'25', response.data)
+
+    def test_add_item_without_name_does_not_add(self):
+        """Test that adding item without name does not add it."""
+        # Create a warehouse first
+        self.client.post('/warehouse/new', data={
+            'name': 'No Name Test',
+            'capacity': '100',
+            'initial_balance': '0'
+        })
+
+        response = self.client.post('/warehouse/1/add', data={
+            'item_name': '',
+            'amount': '10'
+        }, follow_redirects=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(warehouses[1]['warehouse_items']), 0)
+        self.assertAlmostEqual(warehouses[1]['varasto'].saldo, 0)
 
 
 if __name__ == '__main__':

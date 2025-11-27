@@ -39,7 +39,8 @@ def new_warehouse():
         warehouse_id = get_next_id()
         warehouses[warehouse_id] = {
             'name': name,
-            'varasto': Varasto(capacity, initial_balance)
+            'varasto': Varasto(capacity, initial_balance),
+            'warehouse_items': []
         }
         return redirect(url_for('index'))
 
@@ -64,12 +65,18 @@ def add_items(warehouse_id):
     if warehouse_id not in warehouses:
         return redirect(url_for('index'))
 
+    item_name = request.form.get('item_name', '').strip()
     try:
         amount = float(request.form.get('amount', 0))
     except ValueError:
         return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
 
-    warehouses[warehouse_id]['varasto'].lisaa_varastoon(amount)
+    if amount > 0 and item_name:
+        warehouses[warehouse_id]['varasto'].lisaa_varastoon(amount)
+        warehouses[warehouse_id]['warehouse_items'].append({
+            'name': item_name,
+            'amount': amount
+        })
     return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
 
 
@@ -79,12 +86,18 @@ def remove_items(warehouse_id):
     if warehouse_id not in warehouses:
         return redirect(url_for('index'))
 
+    item_index = request.form.get('item_index')
     try:
-        amount = float(request.form.get('amount', 0))
-    except ValueError:
+        item_index = int(item_index)
+    except (ValueError, TypeError):
         return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
 
-    warehouses[warehouse_id]['varasto'].ota_varastosta(amount)
+    items = warehouses[warehouse_id]['warehouse_items']
+    if 0 <= item_index < len(items):
+        item = items[item_index]
+        warehouses[warehouse_id]['varasto'].ota_varastosta(item['amount'])
+        items.pop(item_index)
+
     return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
 
 
